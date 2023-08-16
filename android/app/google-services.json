@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1042954180070",
+    "firebase_url": "https://adem-4a1e7-default-rtdb.firebaseio.com",
+    "project_id": "adem-4a1e7",
+    "storage_bucket": "adem-4a1e7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1042954180070:android:3a57344a229d5a14fdf227",
+        "android_client_info": {
+          "package_name": "com.example.adem"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1042954180070-nooibq0ejcdkqj9h5i1fibab82rtg98m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXHSOBq5SyMd91LHfWb4Amo14waCJrqfQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1042954180070-nooibq0ejcdkqj9h5i1fibab82rtg98m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
