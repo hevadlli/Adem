@@ -1,8 +1,5 @@
-// import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-// import '../datas/dummy.dart';
-// import '../models/kandang_model.dart';
-import '../datas/database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MonitorSuhu extends StatefulWidget {
   const MonitorSuhu({super.key});
@@ -13,16 +10,31 @@ class MonitorSuhu extends StatefulWidget {
 }
 
 class _MonitorSuhu extends State<MonitorSuhu> {
-  final FirestoreDataManager firestoreData = FirestoreDataManager();
+  late Stream<QuerySnapshot<Map<String, dynamic>>> _nodeStream;
+  double averageSuhu = 0.0;
 
   @override
   void initState() {
     super.initState();
-    firestoreData.fetchData();
+    _nodeStream = FirebaseFirestore.instance.collection('nodes').snapshots();
   }
 
-  // Declare your variables here
-  var selected = 0;
+  void calculateAverage(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> nodeDataList) {
+    double totalSuhu = 0.0;
+    int nonNullCount = 0;
+
+    for (var nodeData in nodeDataList) {
+      var data = nodeData.data();
+      if (data['suhu'] != null) {
+        totalSuhu += double.parse(data['suhu'].toString());
+        nonNullCount++;
+      }
+    }
+
+    averageSuhu = nonNullCount > 0 ? totalSuhu / nonNullCount : 0.0;
+  }
+
   @override
   Widget build(BuildContext context) {
     //var suhu = kandangs.isNotEmpty ? kandangs[selected].averageValue.suhu : '';
@@ -35,7 +47,7 @@ class _MonitorSuhu extends State<MonitorSuhu> {
         color: Colors.transparent,
         child: Container(
           height: 305,
-          width: 350,
+          width: double.infinity,
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.all(
@@ -73,7 +85,7 @@ class _MonitorSuhu extends State<MonitorSuhu> {
                 child: Row(
                   children: [
                     Text(
-                      firestoreData.kandangs[selected].averageValue.suhu,
+                      '$averageSuhu',
                       style: const TextStyle(
                         fontSize: 48,
                         color: Color(0xFF025464),
@@ -104,69 +116,83 @@ class _MonitorSuhu extends State<MonitorSuhu> {
                 decoration: const BoxDecoration(
                   color: Colors.transparent,
                 ),
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsetsDirectional.fromSTEB(
-                        10,
-                        0,
-                        0,
-                        0,
-                      ),
-                      height: 145,
-                      width: 110,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF025464),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: _nodeStream,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const CircularProgressIndicator();
+                    }
+                    var data = snapshot.data!.docs;
+                    calculateAverage(data);
+
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (context, index) {
+                        var nodeData = data[index].data();
+                        return Container(
+                          margin: const EdgeInsetsDirectional.fromSTEB(
+                            10,
+                            0,
+                            0,
+                            0,
+                          ),
+                          height: 145,
+                          width: 110,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF025464),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Column(
                             children: [
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                  15,
-                                  10,
-                                  0,
-                                  0,
-                                ),
-                                child: Text(
-                                  firestoreData
-                                      .kandangs[selected].nodes[index].name,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.white,
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                      15,
+                                      10,
+                                      0,
+                                      0,
+                                    ),
+                                    child: Text(
+                                      'Node ${index + 1}',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                      15,
+                                      30,
+                                      0,
+                                      0,
+                                    ),
+                                    child: Text(
+                                      nodeData['suhu'] != null
+                                          ? nodeData['suhu'].toString()
+                                          : 'N/A',
+                                      style: const TextStyle(
+                                        fontSize: 30,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                  15,
-                                  30,
-                                  0,
-                                  0,
-                                ),
-                                child: Text(
-                                  firestoreData.kandangs[selected].nodes[index]
-                                      .value.suhu,
-                                  style: const TextStyle(
-                                    fontSize: 30,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        );
+                      },
+                      itemCount: data.length,
                     );
                   },
-                  itemCount: firestoreData.kandangs[selected].nodes.length,
                 ),
               ),
             ],

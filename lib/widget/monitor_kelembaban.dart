@@ -1,28 +1,39 @@
 import 'package:flutter/material.dart';
-import '../datas/database.dart';
-// import '../models/kandang_model.dart';
-// import '../services/database.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MonitorKelembaban extends StatefulWidget {
-  const MonitorKelembaban({super.key});
+  const MonitorKelembaban({Key? key}) : super(key: key);
 
   @override
   // ignore: library_private_types_in_public_api
-  _MonitorKelembaban createState() => _MonitorKelembaban();
+  _MonitorKelembabanState createState() => _MonitorKelembabanState();
 }
 
-class _MonitorKelembaban extends State<MonitorKelembaban> {
-  final FirestoreDataManager firestoreData = FirestoreDataManager();
+class _MonitorKelembabanState extends State<MonitorKelembaban> {
+  late Stream<QuerySnapshot<Map<String, dynamic>>> _nodeStream;
+  double averageKelembaban = 0.0;
 
   @override
   void initState() {
     super.initState();
-    firestoreData.fetchData();
+    _nodeStream = FirebaseFirestore.instance.collection('nodes').snapshots();
   }
 
-  // Declare your variables here
-  var selected = 0;
+  void calculateAverage(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> nodeDataList) {
+    double totalKelembaban = 0.0;
+    int nonNullCount = 0;
+
+    for (var nodeData in nodeDataList) {
+      var data = nodeData.data();
+      if (data['kelembaban'] != null) {
+        totalKelembaban += double.parse(data['kelembaban'].toString());
+        nonNullCount++;
+      }
+    }
+
+    averageKelembaban = nonNullCount > 0 ? totalKelembaban / nonNullCount : 0.0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +45,7 @@ class _MonitorKelembaban extends State<MonitorKelembaban> {
         color: Colors.transparent,
         child: Container(
           height: 305,
-          width: 350,
+          width: double.infinity,
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.all(
@@ -72,8 +83,7 @@ class _MonitorKelembaban extends State<MonitorKelembaban> {
                 child: Row(
                   children: [
                     Text(
-                      firestoreData.kandangs[selected].averageValue.kelembaban
-                          as String,
+                      '$averageKelembaban',
                       style: const TextStyle(
                         fontSize: 48,
                         color: Color(0xFF025464),
@@ -104,69 +114,83 @@ class _MonitorKelembaban extends State<MonitorKelembaban> {
                 decoration: const BoxDecoration(
                   color: Colors.transparent,
                 ),
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsetsDirectional.fromSTEB(
-                        10,
-                        0,
-                        0,
-                        0,
-                      ),
-                      height: 145,
-                      width: 110,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF025464),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: _nodeStream,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const CircularProgressIndicator();
+                    }
+                    var data = snapshot.data!.docs;
+                    calculateAverage(data);
+
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (context, index) {
+                        var nodeData = data[index].data();
+                        return Container(
+                          margin: const EdgeInsetsDirectional.fromSTEB(
+                            10,
+                            0,
+                            0,
+                            0,
+                          ),
+                          height: 145,
+                          width: 110,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF025464),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Column(
                             children: [
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                  15,
-                                  10,
-                                  0,
-                                  0,
-                                ),
-                                child: Text(
-                                  firestoreData
-                                      .kandangs[selected].nodes[index].name,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.white,
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                      15,
+                                      10,
+                                      0,
+                                      0,
+                                    ),
+                                    child: Text(
+                                      'Node ${index + 1}',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                      15,
+                                      30,
+                                      0,
+                                      0,
+                                    ),
+                                    child: Text(
+                                      nodeData['kelembaban'] != null
+                                          ? nodeData['kelembaban'].toString()
+                                          : 'N/A',
+                                      style: const TextStyle(
+                                        fontSize: 30,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                  15,
-                                  30,
-                                  0,
-                                  0,
-                                ),
-                                child: Text(
-                                  firestoreData.kandangs[selected].nodes[index]
-                                      .value.kelembaban,
-                                  style: const TextStyle(
-                                    fontSize: 30,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        );
+                      },
+                      itemCount: data.length,
                     );
                   },
-                  itemCount: firestoreData.kandangs[selected].nodes.length,
                 ),
               ),
             ],

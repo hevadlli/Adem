@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Kandang {
   final String name;
   final List<Node> nodes;
@@ -40,29 +38,4 @@ class Value {
   final String kelembaban;
 
   Value({required this.suhu, required this.kelembaban});
-}
-
-class FirestoreData {
-  late Node node;
-  late Value value;
-
-  Future<void> fetchData() async {
-    DocumentSnapshot snapshot = await FirebaseFirestore.instance
-        .collection('kandangs')
-        .doc('Node')
-        .get();
-
-    var data = snapshot.data() as Map<String, dynamic>;
-
-    node = Node(
-      name: data['name'],
-      value: Value(
-        suhu: data['value']['suhu'],
-        kelembaban: data['value']['kelembaban'],
-      ),
-      relay: data['relay'],
-    );
-
-    value = node.value;
-  }
 }

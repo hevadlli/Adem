@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:adem/widget/app_bar.dart';
 
-import '../widget/notif_list.dart';
-
 class HistoryPage extends StatefulWidget {
-  final bool manualMode; // Tambahkan properti manualMode
-  const HistoryPage({Key? key, required this.manualMode}) : super(key: key);
+  const HistoryPage({super.key});
 
   @override
   State<HistoryPage> createState() {
@@ -14,14 +11,15 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+  var selected = 0;
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: Scaffold(
-        appBar: const CustomAppBar(),
+        appBar: CustomAppBar(),
         body: Column(
           children: [
-            const Row(
+            Row(
               children: [
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(
@@ -39,11 +37,6 @@ class _HistoryPageState extends State<HistoryPage> {
                   ),
                 )
               ],
-            ),
-            Expanded(
-              child: NotificationList(
-                manualMode: widget.manualMode,
-              ),
             ),
           ],
         ),
