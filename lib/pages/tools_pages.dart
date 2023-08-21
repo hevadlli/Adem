@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:adem/widget/app_bar.dart';
-
+import '../models/manual_model.dart';
 import '../widget/control_node.dart';
 import '../widget/manual_mode.dart';
-// import 'package:adem/widget/kandang_bar.dart';
 
 class ToolPage extends StatefulWidget {
-  const ToolPage({super.key});
+  const ToolPage({Key? key}) : super(key: key);
 
   @override
   State<ToolPage> createState() {
@@ -15,8 +14,7 @@ class ToolPage extends StatefulWidget {
 }
 
 class _ToolPageState extends State<ToolPage> {
-  var selected = 0;
-  bool manualMode = false; // Initial state of manual mode
+  final ManualModeManager _manualModeManager = ManualModeManager();
 
   @override
   Widget build(BuildContext context) {
@@ -26,27 +24,18 @@ class _ToolPageState extends State<ToolPage> {
         body: Column(
           children: [
             ManualModeSwitch(
-              manualMode: manualMode,
+              manualMode: _manualModeManager.manualMode,
               onChanged: (value) {
                 setState(() {
-                  manualMode = value;
+                  _manualModeManager.setManualMode(value);
                 });
               },
             ),
             ControlNode(
-              manualMode: manualMode,
+              manualMode: _manualModeManager.manualMode,
             ),
           ],
         ),
-        // floatingActionButton: manualMode
-        //     ? null // If manual mode is active, hide the floating action button
-        //     : FloatingActionButton(
-        //         onPressed: () {
-        //           addNode();
-        //         },
-        //         backgroundColor: const Color(0xFF025464),
-        //         child: const Icon(Icons.add),
-        //       ),
       ),
     );
   }
