@@ -16,11 +16,21 @@ class NotificationList extends StatefulWidget {
 
 class _NotificationListState extends State<NotificationList> {
   late Stream<QuerySnapshot<Map<String, dynamic>>> _nodeStream;
+  List<String> notifications = []; // List to store notifications
 
   @override
   void initState() {
     super.initState();
     _nodeStream = FirebaseFirestore.instance.collection('nodes').snapshots();
+  }
+
+  void addNotification(String message) {
+    if (notifications.length >= 20) {
+      notifications.removeAt(0); // Remove the oldest notification
+    }
+    setState(() {
+      notifications.add(message);
+    });
   }
 
   @override
@@ -33,61 +43,46 @@ class _NotificationListState extends State<NotificationList> {
             return const CircularProgressIndicator();
           }
 
-          final notifications = <Widget>[];
-
           for (var doc in snapshot.data!.docs) {
             final data = doc.data();
             if (data['relay'] == true && widget.manualMode) {
-              notifications.add(
-                Container(
-                  margin: const EdgeInsetsDirectional.fromSTEB(
-                    10,
-                    20,
-                    10,
-                    20,
-                  ),
-                  width: double.infinity,
-                  height: 160,
-                  decoration: const BoxDecoration(
-                    color: Color.fromARGB(169, 255, 255, 255),
-                  ),
-                  child: Text(
-                    "Sprayer pada Node ${doc.id} diaktifkan Manual Suhu: ${data['suhu']}°C dan Kelembaban: ${data['kelembaban']}% terlalu tinggi.",
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF025464),
-                    ),
-                  ),
-                ),
+              addNotification(
+                "Sprayer pada ${doc.id} diaktifkan Manual Suhu: ${data['suhu']}°C dan Kelembaban: ${data['kelembaban']}% terlalu tinggi.",
               );
             } else if (data['relay'] == true) {
-              notifications.add(
-                Container(
-                  margin: const EdgeInsetsDirectional.fromSTEB(
-                    10,
-                    20,
-                    10,
-                    20,
-                  ),
-                  width: double.infinity,
-                  height: 160,
-                  decoration: const BoxDecoration(
-                    color: Color.fromARGB(169, 255, 255, 255),
-                  ),
-                  child: Text(
-                    "Sprayer pada Node ${doc.id} diaktifkan Otomatis Suhu: ${data['suhu']}°C dan Kelembaban: ${data['kelembaban']}% terlalu tinggi.",
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF025464),
-                    ),
-                  ),
-                ),
+              addNotification(
+                "Sprayer pada ${doc.id} diaktifkan Otomatis Suhu: ${data['suhu']}°C dan Kelembaban: ${data['kelembaban']}% terlalu tinggi.",
               );
             }
           }
 
-          return Column(
-            children: notifications,
+          return SingleChildScrollView(
+            child: Column(
+              children: notifications.reversed
+                  .map(
+                    (notification) => Container(
+                      margin: const EdgeInsetsDirectional.fromSTEB(
+                        10,
+                        20,
+                        10,
+                        20,
+                      ),
+                      width: double.infinity,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        color: Color.fromARGB(169, 255, 255, 255),
+                      ),
+                      child: Text(
+                        notification,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Color(0xFF025464),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
           );
         },
       ),
