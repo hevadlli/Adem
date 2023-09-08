@@ -13,12 +13,12 @@ class ControlNode extends StatefulWidget {
 
 class _ControlNodeState extends State<ControlNode> {
   late Stream<QuerySnapshot<Map<String, dynamic>>> _nodeStream;
-  bool resetNodes = false; // Flag to reset Kandang1
+  bool resetNodes = false; // Flag to reset nodes
 
   @override
   void initState() {
     super.initState();
-    _nodeStream = FirebaseFirestore.instance.collection('Kandang1').snapshots();
+    _nodeStream = FirebaseFirestore.instance.collection('nodes').snapshots();
   }
 
   @override
@@ -40,7 +40,7 @@ class _ControlNodeState extends State<ControlNode> {
                 if (nodeDoc.data()['relay'] == true) {
                   // Update relay value to false in Firestore
                   FirebaseFirestore.instance
-                      .collection('Kandang1')
+                      .collection('nodes')
                       .doc(nodeDoc.id)
                       .update({
                     'relay': false,
@@ -83,7 +83,7 @@ class _ControlNodeState extends State<ControlNode> {
                                     // Handle switch state change for node when manualMode is true
                                     // Set the new switch value to your node
                                     await FirebaseFirestore.instance
-                                        .collection('Kandang1')
+                                        .collection('nodes')
                                         .doc(data[index].id)
                                         .update({
                                       'relay': value,

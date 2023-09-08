@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MonitorKelembaban extends StatefulWidget {
-  const MonitorKelembaban({Key? key}) : super(key: key);
+  const MonitorKelembaban({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _MonitorKelembabanState createState() => _MonitorKelembabanState();
+  _MonitorKelembaban createState() => _MonitorKelembaban();
 }
 
-class _MonitorKelembabanState extends State<MonitorKelembaban> {
+class _MonitorKelembaban extends State<MonitorKelembaban> {
   late Stream<QuerySnapshot<Map<String, dynamic>>> _nodeStream;
   double averageKelembaban = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _nodeStream = FirebaseFirestore.instance.collection('nodes').snapshots();
+    _nodeStream = FirebaseFirestore.instance.collection('Kandang1').snapshots();
   }
 
   void calculateAverage(
@@ -37,8 +37,10 @@ class _MonitorKelembabanState extends State<MonitorKelembaban> {
 
   @override
   Widget build(BuildContext context) {
+    //var kelembaban = kandangs.isNotEmpty ? kandangs[selected].averageValue.kelembaban : '';
+
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(15, 10, 15, 30),
+      padding: const EdgeInsetsDirectional.fromSTEB(15, 30, 15, 15),
       child: Material(
         elevation: 4,
         borderRadius: const BorderRadius.all(Radius.circular(20)),
@@ -126,66 +128,76 @@ class _MonitorKelembabanState extends State<MonitorKelembaban> {
                     return ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (context, index) {
-                        var nodeData = data[index].data();
-                        return Container(
-                          margin: const EdgeInsetsDirectional.fromSTEB(
-                            10,
-                            0,
-                            0,
-                            0,
-                          ),
-                          height: 145,
-                          width: 110,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF025464),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                      15,
-                                      10,
-                                      0,
-                                      0,
-                                    ),
-                                    child: Text(
-                                      'Node ${index + 1}',
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                        // var nodeData = data[index].data();
+                        var nodeReference = data[index].reference;
+                        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                          stream: nodeReference.collection('Data').snapshots(),
+                          builder: (context, subcollectionSnapshot) {
+                          if (!subcollectionSnapshot.hasData) {
+                          return const CircularProgressIndicator();
+                          }
+                          var subcollectionData = subcollectionSnapshot.data!.docs;
+                            return Container(
+                              margin: const EdgeInsetsDirectional.fromSTEB(
+                                10,
+                                0,
+                                0,
+                                0,
                               ),
-                              Row(
+                              height: 145,
+                              width: 110,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF025464),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Column(
                                 children: [
-                                  Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                      15,
-                                      30,
-                                      0,
-                                      0,
-                                    ),
-                                    child: Text(
-                                      nodeData['kelembaban'] != null
-                                          ? nodeData['kelembaban'].toString()
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional.fromSTEB(
+                                          15,
+                                          10,
+                                          0,
+                                          0,
+                                        ),
+                                        child: Text(
+                                          'Node ${index + 1}',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional.fromSTEB(
+                                          15,
+                                          30,
+                                          0,
+                                          0,
+                                        ),
+                                        child: Text(
+                                          subcollectionData.isNotEmpty
+                                          ? subcollectionData[0]['kelembaban'].toString()
                                           : 'N/A',
-                                      style: const TextStyle(
-                                        fontSize: 30,
-                                        color: Colors.white,
+                                          style: const TextStyle(
+                                            fontSize: 30,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            );
+                          }
                         );
                       },
                       itemCount: data.length,
