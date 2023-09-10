@@ -12,6 +12,7 @@ class MonitorKelembaban extends StatefulWidget {
 class _MonitorKelembaban extends State<MonitorKelembaban> {
   late Stream<QuerySnapshot<Map<String, dynamic>>> _nodeStream;
   double averageKelembaban = 0.0;
+  int totalNodes = 0;
 
   @override
   void initState() {
@@ -19,26 +20,8 @@ class _MonitorKelembaban extends State<MonitorKelembaban> {
     _nodeStream = FirebaseFirestore.instance.collection('Kandang1').snapshots();
   }
 
-  void calculateAverage(
-      List<QueryDocumentSnapshot<Map<String, dynamic>>> nodeDataList) {
-    double totalKelembaban = 0.0;
-    int nonNullCount = 0;
-
-    for (var nodeData in nodeDataList) {
-      var data = nodeData.data();
-      if (data['kelembaban'] != null) {
-        totalKelembaban += double.parse(data['kelembaban'].toString());
-        nonNullCount++;
-      }
-    }
-
-    averageKelembaban = nonNullCount > 0 ? totalKelembaban / nonNullCount : 0.0;
-  }
-
   @override
   Widget build(BuildContext context) {
-    //var kelembaban = kandangs.isNotEmpty ? kandangs[selected].averageValue.kelembaban : '';
-
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(15, 30, 15, 15),
       child: Material(
@@ -123,7 +106,8 @@ class _MonitorKelembaban extends State<MonitorKelembaban> {
                       return const CircularProgressIndicator();
                     }
                     var data = snapshot.data!.docs;
-                    calculateAverage(data);
+                    averageKelembaban= 0.0;
+                    totalNodes = 0;
 
                     return ListView.builder(
                       scrollDirection: Axis.horizontal,
@@ -131,12 +115,21 @@ class _MonitorKelembaban extends State<MonitorKelembaban> {
                         // var nodeData = data[index].data();
                         var nodeReference = data[index].reference;
                         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                          stream: nodeReference.collection('Data').snapshots(),
+                          stream: nodeReference.collection('Humidity').snapshots(),
                           builder: (context, subcollectionSnapshot) {
                           if (!subcollectionSnapshot.hasData) {
                           return const CircularProgressIndicator();
                           }
                           var subcollectionData = subcollectionSnapshot.data!.docs;
+                          if (subcollectionData.isNotEmpty) {
+                          averageKelembaban += subcollectionData[0]['kelembaban'];
+                          totalNodes++;
+                         }
+
+            // Hitung rata-rata kelembaban
+                          averageKelembaban = totalNodes > 0
+                          ? averageKelembaban / totalNodes
+                          : 0.0;
                             return Container(
                               margin: const EdgeInsetsDirectional.fromSTEB(
                                 10,

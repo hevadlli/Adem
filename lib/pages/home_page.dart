@@ -1,3 +1,4 @@
+import 'package:adem/widget/monitor_amonia.dart';
 import 'package:flutter/material.dart';
 import 'package:adem/widget/app_bar.dart';
 // import 'package:adem/widget/kandang_bar.dart';
@@ -41,6 +42,7 @@ class _HomePageState extends State<HomePage> {
               // ),
               MonitorSuhu(),
               MonitorKelembaban(),
+              MonitorAmonia()
             ],
           ),
         ),

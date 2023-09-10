@@ -131,7 +131,7 @@ class _MonitorSuhu extends State<MonitorSuhu> {
                         // var nodeData = data[index].data();
                         var nodeReference = data[index].reference;
                         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                          stream: nodeReference.collection('Data').snapshots(),
+                          stream: nodeReference.collection('Temperature').snapshots(),
                           builder: (context, subcollectionSnapshot) {
                           if (!subcollectionSnapshot.hasData) {
                           return const CircularProgressIndicator();
