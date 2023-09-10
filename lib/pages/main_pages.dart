@@ -19,9 +19,7 @@ class _MainPagesState extends State<MainPages> {
     const HomePage(),
     const ToolPage(),
     const ChartPage(),
-    const HistoryPage(
-      manualMode: true,
-    ),
+    const HistoryPage(),
   ];
 
   @override

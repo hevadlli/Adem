@@ -79,20 +79,29 @@ class _ControlNodeState extends State<ControlNode> {
                           Switch(
                             value: isNodeActive,
                             onChanged: widget.manualMode
-                                ? (value) async {
-                                    // Handle switch state change for node when manualMode is true
-                                    // Set the new switch value to your node
-                                    await FirebaseFirestore.instance
-                                        .collection('Kandang1')
-                                        .doc(data[index].id)
-                                        .update({
-                                      'relay': value,
-                                    });
-                                    setState(() {
-                                      // Update local UI state
-                                    });
-                                  }
-                                : null,
+                            ? (value) async {
+                            // Handle switch state change for node when manualMode is true
+                            // Set the new switch value to your node
+                              await FirebaseFirestore.instance
+                              .collection('Kandang1')
+                              .doc(data[index].id)
+                              .update({
+                              'relay': value,
+                              });
+
+                              if (value == true) {
+                              // Jika relay dinyalakan manual, kirim notifikasi ke koleksi "notification"
+                              await FirebaseFirestore.instance.collection('Notification').add({
+                              'message': 'Sprayer Node ${index + 1} dinyalakan manual.',
+                              'timestamp': FieldValue.serverTimestamp(),
+                              });
+                              } 
+
+                            setState(() {
+                            // Update local UI state
+                            });
+                          }
+                          : null,
                             activeColor: const Color(0xFF025464),
                           ),
                         ],

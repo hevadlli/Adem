@@ -1,109 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ControlNode extends StatefulWidget {
-  final bool manualMode; // Pass manualMode as a parameter
-
-  const ControlNode({Key? key, required this.manualMode}) : super(key: key);
-
+class NotificationPage extends StatefulWidget {
   @override
-  // ignore: library_private_types_in_public_api
-  _ControlNodeState createState() => _ControlNodeState();
+  _NotificationPageState createState() => _NotificationPageState();
 }
 
-class _ControlNodeState extends State<ControlNode> {
-  late Stream<QuerySnapshot<Map<String, dynamic>>> _nodeStream;
-  bool resetNodes = false; // Flag to reset nodes
+class _NotificationPageState extends State<NotificationPage> {
+  late Stream<QuerySnapshot<Map<String, dynamic>>> _notificationStream;
 
   @override
   void initState() {
     super.initState();
-    _nodeStream = FirebaseFirestore.instance.collection('nodes').snapshots();
+    _notificationStream =
+        FirebaseFirestore.instance.collection('Notifikasi').orderBy('timestamp', descending: true).snapshots();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 10),
-        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: _nodeStream,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const CircularProgressIndicator();
-            }
-            var data = snapshot.data!.docs;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Notifikasi'),
+      ),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: _notificationStream,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-            // Reset nodes if resetNodes flag is set and manualMode is false
-            if (!widget.manualMode) {
-              for (var nodeDoc in data) {
-                if (nodeDoc.data()['relay'] == true) {
-                  // Update relay value to false in Firestore
-                  FirebaseFirestore.instance
-                      .collection('nodes')
-                      .doc(nodeDoc.id)
-                      .update({
-                    'relay': false,
-                  });
-                }
-              }
-            }
+          final notifications = snapshot.data!.docs;
 
-            return ListView.builder(
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                var nodeData = data[index].data();
-                bool isNodeActive = nodeData['relay'] ?? false;
+          return ListView.builder(
+            itemCount: notifications.length,
+            itemBuilder: (context, index) {
+              final notification = notifications[index].data();
+              final message = notification['message'] as String;
 
-                return Container(
-                  height: 100,
-                  margin: const EdgeInsetsDirectional.symmetric(
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Center(
-                    child: ListTile(
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Node ${index + 1}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              color: Color(0xFF025464),
-                            ),
-                          ),
-                          Switch(
-                            value: isNodeActive,
-                            onChanged: widget.manualMode
-                                ? (value) async {
-                                    // Handle switch state change for node when manualMode is true
-                                    // Set the new switch value to your node
-                                    await FirebaseFirestore.instance
-                                        .collection('nodes')
-                                        .doc(data[index].id)
-                                        .update({
-                                      'relay': value,
-                                    });
-                                    setState(() {
-                                      // Update local UI state
-                                    });
-                                  }
-                                : null,
-                            activeColor: const Color(0xFF025464),
-                          ),
-                        ],
-                      ),
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                decoration: const BoxDecoration(
+                  color: Color.fromARGB(169, 255, 255, 255),
+                ),
+                child: ListTile(
+                  title: Text(
+                    message,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF025464),
                     ),
                   ),
-                );
-              },
-            );
-          },
-        ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
