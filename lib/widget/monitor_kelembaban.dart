@@ -68,7 +68,7 @@ class _MonitorKelembaban extends State<MonitorKelembaban> {
                 child: Row(
                   children: [
                     Text(
-                      '$averageKelembaban',
+                      double.parse('$averageKelembaban'.toString()).toStringAsFixed(1),
                       style: const TextStyle(
                         fontSize: 48,
                         color: Color(0xFF025464),
@@ -106,92 +106,115 @@ class _MonitorKelembaban extends State<MonitorKelembaban> {
                       return const CircularProgressIndicator();
                     }
                     var data = snapshot.data!.docs;
-                    averageKelembaban= 0.0;
-                    totalNodes = 0;
 
                     return ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (context, index) {
                         // var nodeData = data[index].data();
                         var nodeReference = data[index].reference;
-                        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                          stream: nodeReference.collection('Humidity').snapshots(),
-                          builder: (context, subcollectionSnapshot) {
-                          if (!subcollectionSnapshot.hasData) {
-                          return const CircularProgressIndicator();
-                          }
-                          var subcollectionData = subcollectionSnapshot.data!.docs;
-                          if (subcollectionData.isNotEmpty) {
-                          averageKelembaban += subcollectionData[0]['kelembaban'];
-                          totalNodes++;
-                         }
-
-            // Hitung rata-rata kelembaban
-                          averageKelembaban = totalNodes > 0
-                          ? averageKelembaban / totalNodes
-                          : 0.0;
-                            return Container(
-                              margin: const EdgeInsetsDirectional.fromSTEB(
-                                10,
-                                0,
-                                0,
-                                0,
-                              ),
-                              height: 145,
-                              width: 110,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF025464),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional.fromSTEB(
-                                          15,
-                                          10,
-                                          0,
-                                          0,
-                                        ),
-                                        child: Text(
-                                          'Node ${index + 1}',
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            color: Colors.white,
+                        totalNodes = 0;
+                        averageKelembaban = 0.0;
+                        return StreamBuilder<
+                                QuerySnapshot<Map<String, dynamic>>>(
+                            stream: nodeReference
+                                .collection('Humidity')
+                                .orderBy('timestamp', descending: true)
+                                .snapshots(),
+                            builder: (context, subcollectionSnapshot) {
+                              if (!subcollectionSnapshot.hasData) {
+                                return const CircularProgressIndicator();
+                              }
+                              var subcollectionData =
+                                  subcollectionSnapshot.data!.docs;
+                              if (subcollectionData.isNotEmpty) {
+                                averageKelembaban +=
+                                    subcollectionData[0]['kelembaban'];
+                                totalNodes++;
+                              }
+                              // Hitung rata-rata kelembaban
+                              averageKelembaban = totalNodes > 0
+                                  ? averageKelembaban / totalNodes
+                                  : 0.0;
+                              return Container(
+                                margin: const EdgeInsetsDirectional.fromSTEB(
+                                  10,
+                                  0,
+                                  0,
+                                  0,
+                                ),
+                                height: 145,
+                                width: 110,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF025464),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional
+                                              .fromSTEB(
+                                            15,
+                                            10,
+                                            0,
+                                            0,
+                                          ),
+                                          child: Text(
+                                            'Node ${index + 1}',
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional.fromSTEB(
-                                          15,
-                                          30,
-                                          0,
-                                          0,
-                                        ),
-                                        child: Text(
-                                          subcollectionData.isNotEmpty
-                                          ? subcollectionData[0]['kelembaban'].toString()
-                                          : 'N/A',
-                                          style: const TextStyle(
-                                            fontSize: 30,
-                                            color: Colors.white,
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional
+                                              .fromSTEB(
+                                            15,
+                                            30,
+                                            0,
+                                            0,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                subcollectionData.isNotEmpty
+                                                    ? double.parse(
+                                                            subcollectionData[0]
+                                                                    [
+                                                                    'kelembaban']
+                                                                .toString())
+                                                        .toStringAsFixed(1)
+                                                    : 'N/A',
+                                                style: const TextStyle(
+                                                  fontSize: 30,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              const Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(5,5,4,10),
+                                                child: Text(
+                                                  '%',
+                                                  style: TextStyle(
+                                                    fontSize: 15,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              )
+                                            ],
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                        );
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            });
                       },
                       itemCount: data.length,
                     );

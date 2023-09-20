@@ -1,62 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart';
 
-class NotificationPage extends StatefulWidget {
+class GrafikSuhuScreen extends StatefulWidget {
+  const GrafikSuhuScreen({super.key});
+
   @override
-  _NotificationPageState createState() => _NotificationPageState();
+  // ignore: library_private_types_in_public_api
+  _GrafikSuhuScreenState createState() => _GrafikSuhuScreenState();
 }
 
-class _NotificationPageState extends State<NotificationPage> {
-  late Stream<QuerySnapshot<Map<String, dynamic>>> _notificationStream;
+class _GrafikSuhuScreenState extends State<GrafikSuhuScreen> {
+  List<DocumentSnapshot> dataSuhu = [];
 
   @override
   void initState() {
     super.initState();
-    _notificationStream =
-        FirebaseFirestore.instance.collection('Notifikasi').orderBy('timestamp', descending: true).snapshots();
+    loadDataSuhu();
+  }
+
+  // Fungsi untuk mengambil data suhu dari Firestore
+  Future<void> loadDataSuhu() async {
+    // Ganti 'suhu' dengan nama koleksi di Firestore Anda
+    List<QuerySnapshot> snapshots = [];
+
+    for (int index = 1; index <= 12; index++) { // Ambil data dari 12 jam yang berbeda
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Kandang1')
+          .doc('Node1')
+          .collection('Temperature')
+          .where('jam', isEqualTo: index.toString()) // Filter berdasarkan jam yang berbeda
+          .orderBy('timestamp', descending: true)
+          .limit(1) // Ambil 1 data terbaru untuk setiap jam
+          .get();
+      snapshots.add(snapshot);
+    }
+
+    setState(() {
+      dataSuhu = snapshots.expand((snapshot) => snapshot.docs).toList();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Notifikasi'),
-      ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _notificationStream,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          final notifications = snapshot.data!.docs;
-
-          return ListView.builder(
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final notification = notifications[index].data();
-              final message = notification['message'] as String;
-
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(169, 255, 255, 255),
-                ),
-                child: ListTile(
-                  title: Text(
-                    message,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF025464),
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
+    return Expanded(
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(show: false),
+          titlesData: FlTitlesData(show: false),
+          borderData: FlBorderData(
+            show: true,
+            border: Border.all(
+              color: const Color(0xff37434d),
+              width: 1,
+            ),
+          ),
+          minX: 0,
+          maxX: 11,
+          minY: 0,
+          maxY: 100, // Sesuaikan dengan rentang nilai suhu Anda
+          lineBarsData: [
+            LineChartBarData(
+              spots: dataSuhu.asMap().entries.map((entry) {
+                final int index = entry.key;
+                final DocumentSnapshot data = entry.value;
+                final double nilaiSuhu = data['nilaiSuhu'].toDouble();
+                return FlSpot(index.toDouble(), nilaiSuhu);
+              }).toList(),
+              isCurved: true,
+              colors: [Colors.blue],
+              dotData: FlDotData(show: false),
+              belowBarData: BarAreaData(show: false),
+            ),
+          ],
+        ),
       ),
     );
   }
