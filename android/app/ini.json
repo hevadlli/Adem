@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:641481640590:android:6111d4fc04229e554217df",
+        "mobilesdk_app_id": "1:641481640590:android:6a3af54abc10bd194217df",
         "android_client_info": {
-          "package_name": "com.example.adem"
+          "package_name": "com.company.coba"
         }
       },
       "oauth_client": [

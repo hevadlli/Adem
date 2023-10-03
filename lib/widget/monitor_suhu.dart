@@ -53,14 +53,35 @@ class _MonitorSuhuState extends State<MonitorSuhu> {
 
     double averageSuhu = nodeCount > 0 ? totalSuhu / nodeCount : 0.0;
 
-    // Upload data rata-rata ke Firestore setiap 1 menit
+    // Mendapatkan jam saat ini
+    DateTime now = DateTime.now();
+    int currentHour = now.hour;
+
+// Konversi ke format 24 jam
+    // int formattedHour12 = currentHour == 12 ? 12 : (currentHour + 12) % 24;
+    if (currentHour > 12) {
+      String formattedHour = (currentHour - 12).toString().padLeft(2, '0');
+
+      // Upload data rata-rata ke Firestore dengan nama dokumen berdasarkan jam
       FirebaseFirestore.instance
-          .collection('average_suhu') // Ganti dengan koleksi yang sesuai
-          .doc() // Ganti dengan dokumen yang sesuai
+          .collection('average_suhu')
+          .doc(formattedHour) // Gunakan formattedHour sebagai nama dokumen
           .set({
         'average_suhu': averageSuhu,
         'timestamp': FieldValue.serverTimestamp(),
       });
+    } else {
+      String formattedHour = currentHour.toString().padLeft(2, '0');
+
+      // Upload data rata-rata ke Firestore dengan nama dokumen berdasarkan jam
+      FirebaseFirestore.instance
+          .collection('average_suhu')
+          .doc(formattedHour) // Gunakan formattedHour sebagai nama dokumen
+          .set({
+        'average_suhu': averageSuhu,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
 
     setState(() {
       _averageSuhu = averageSuhu;

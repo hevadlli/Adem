@@ -51,16 +51,35 @@ class _MonitorKelembabanState extends State<MonitorKelembaban> {
       }
     }
 
-    double averageKelembaban = nodeCount > 0 ? totalKelembaban / nodeCount : 0.0;
+    double averageKelembaban =
+        nodeCount > 0 ? totalKelembaban / nodeCount : 0.0;
 
-    // Upload data rata-rata ke Firestore setiap 1 menit
-    FirebaseFirestore.instance
-        .collection('average_kel') // Ganti dengan koleksi yang sesuai
-        .doc() // Ganti dengan dokumen yang sesuai
-        .set({
-      'average_kel': averageKelembaban,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+    DateTime now = DateTime.now();
+    int currentHour = now.hour;
+
+// Konversi ke format 24 jam
+    // int formattedHour12 = currentHour == 12 ? 12 : (currentHour + 12) % 24;
+    if (currentHour > 12) {
+      String formattedHour = (currentHour-12).toString().padLeft(2, '0');
+      // Upload data rata-rata ke Firestore setiap 1 menit
+      FirebaseFirestore.instance
+          .collection('average_kel') // Ganti dengan koleksi yang sesuai
+          .doc(formattedHour) // Ganti dengan dokumen yang sesuai
+          .set({
+        'average_kel': averageKelembaban,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } else {
+      String formattedHour = currentHour.toString().padLeft(2, '0');
+      // Upload data rata-rata ke Firestore setiap 1 menit
+      FirebaseFirestore.instance
+          .collection('average_kel') // Ganti dengan koleksi yang sesuai
+          .doc(formattedHour) // Ganti dengan dokumen yang sesuai
+          .set({
+        'average_kel': averageKelembaban,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
 
     setState(() {
       _averageKelembaban = averageKelembaban;
