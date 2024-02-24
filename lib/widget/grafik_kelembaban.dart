@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-// import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -23,12 +23,42 @@ class GrafikHumidity extends StatefulWidget {
   const GrafikHumidity({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _GrafikHumidity createState() => _GrafikHumidity();
 }
 
 class _GrafikHumidity extends State<GrafikHumidity> {
   late List<Kelembaban> mydata;
+  StreamSubscription? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = Stream.periodic(Duration(minutes: 5)).listen((_) {
+      // Lakukan permintaan Firestore untuk mendapatkan data terbaru
+      // Ganti dengan kode stream Firestore yang sesuai
+      FirebaseFirestore.instance
+          .collection('average_kel')
+          .orderBy('timestamp', descending: false)
+          .limit(12)
+          .get()
+          .then((QuerySnapshot querySnapshot) {
+        if (querySnapshot.docs.isNotEmpty) {
+          List<Kelembaban> kelembabanData = querySnapshot.docs.map((doc) {
+            return Kelembaban.fromMap(doc.data() as Map<String, dynamic>);
+          }).toList();
+          setState(() {
+            mydata = kelembabanData;
+          });
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _subscription?.cancel();
+  }
 
   double _getMaxKelembabanValue(List<Kelembaban> data) {
     double maxVal = 0.0;
@@ -92,8 +122,8 @@ class _GrafikHumidity extends State<GrafikHumidity> {
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('average_kel')
-                      .orderBy('timestamp', descending: false)
                       .limit(12)
+                      .orderBy('timestamp', descending: false)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
@@ -110,7 +140,7 @@ class _GrafikHumidity extends State<GrafikHumidity> {
                       return Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: SizedBox(
-                          height: 250, // Sesuaikan tinggi sesuai kebutuhan
+                          height: 250,
                           child: LineChart(
                             LineChartData(
                               gridData: FlGridData(show: true),
@@ -121,10 +151,9 @@ class _GrafikHumidity extends State<GrafikHumidity> {
                                   showTitles: true,
                                   reservedSize: 20,
                                   getTitles: (value) {
-                                    // Tampilkan angka bulat di sumbu Y, dimulai dari 1
                                     if (value ==
                                         _getMinKelembabanValue(mydata) - 2) {
-                                      return ''; // Jika nilai adalah 0, maka jangan tampilkan label
+                                      return '';
                                     } else {
                                       return value.toInt().toString();
                                     }
@@ -134,9 +163,8 @@ class _GrafikHumidity extends State<GrafikHumidity> {
                                   showTitles: true,
                                   reservedSize: 20,
                                   getTitles: (value) {
-                                    // Tampilkan jam di sumbu X
-                                    int index = value.toInt();
-                                    if (index >= 0 && index <= 12) {
+                                    int index = value.toInt() + 1;
+                                    if (index > 0 && index <= 12) {
                                       if ((index) % 2 == 0) {
                                         DateTime currentTime = DateTime.now();
                                         DateTime timestamp =
@@ -153,7 +181,7 @@ class _GrafikHumidity extends State<GrafikHumidity> {
                                 ),
                               ),
                               borderData: FlBorderData(show: false),
-                              minX: -1,
+                              minX: 0,
                               maxX: 11,
                               minY: _getMinKelembabanValue(mydata) - 2,
                               maxY: _getMaxKelembabanValue(mydata) + 2,

@@ -1,16 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-// import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
-
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   await Firebase.initializeApp();
-//   runApp(const MaterialApp(
-//     debugShowCheckedModeBanner: false,
-//     home: GrafikSuhu(),
-//   ));
-// }
 
 class Suhu {
   final double averageSuhu;
@@ -32,12 +23,42 @@ class GrafikSuhu extends StatefulWidget {
   const GrafikSuhu({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _GrafikSuhu createState() => _GrafikSuhu();
 }
 
 class _GrafikSuhu extends State<GrafikSuhu> {
   late List<Suhu> mydata;
+  StreamSubscription? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = Stream.periodic(Duration(minutes: 5)).listen((_) {
+      // Lakukan permintaan Firestore untuk mendapatkan data terbaru
+      // Ganti dengan kode stream Firestore yang sesuai
+      FirebaseFirestore.instance
+          .collection('average_suhu')
+          .orderBy('timestamp', descending: false)
+          .limit(12)
+          .get()
+          .then((QuerySnapshot querySnapshot) {
+        if (querySnapshot.docs.isNotEmpty) {
+          List<Suhu> suhuData = querySnapshot.docs.map((doc) {
+            return Suhu.fromMap(doc.data() as Map<String, dynamic>);
+          }).toList();
+          setState(() {
+            mydata = suhuData;
+          });
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _subscription?.cancel();
+  }
 
   double _getMaxSuhuValue(List<Suhu> data) {
     double maxVal = 0.0;
@@ -119,7 +140,7 @@ class _GrafikSuhu extends State<GrafikSuhu> {
                       return Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: SizedBox(
-                          height: 250, // Sesuaikan tinggi sesuai kebutuhan
+                          height: 250,
                           child: LineChart(
                             LineChartData(
                               gridData: FlGridData(show: true),
@@ -130,9 +151,8 @@ class _GrafikSuhu extends State<GrafikSuhu> {
                                   showTitles: true,
                                   reservedSize: 20,
                                   getTitles: (value) {
-                                    // Tampilkan angka bulat di sumbu Y, dimulai dari 1
                                     if (value == _getMinSuhuValue(mydata) - 1) {
-                                      return ''; // Jika nilai adalah 0, maka jangan tampilkan label
+                                      return '';
                                     } else {
                                       return value.toInt().toString();
                                     }
@@ -142,9 +162,8 @@ class _GrafikSuhu extends State<GrafikSuhu> {
                                   showTitles: true,
                                   reservedSize: 20,
                                   getTitles: (value) {
-                                    // Tampilkan jam di sumbu X
                                     int index = value.toInt() + 1;
-                                    if (index >= 0 && index <= 12) {
+                                    if (index > 0 && index <= 12) {
                                       if ((index) % 2 == 0) {
                                         DateTime currentTime = DateTime.now();
                                         DateTime timestamp =
@@ -161,7 +180,7 @@ class _GrafikSuhu extends State<GrafikSuhu> {
                                 ),
                               ),
                               borderData: FlBorderData(show: false),
-                              minX: -1,
+                              minX: 0,
                               maxX: 11,
                               minY: _getMinSuhuValue(mydata) - 1,
                               maxY: _getMaxSuhuValue(mydata) + 1,

@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-// import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -23,12 +23,42 @@ class GrafikAmoniak extends StatefulWidget {
   const GrafikAmoniak({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _GrafikAmoniak createState() => _GrafikAmoniak();
 }
 
 class _GrafikAmoniak extends State<GrafikAmoniak> {
   late List<Amoniak> mydata;
+  StreamSubscription? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = Stream.periodic(Duration(minutes: 5)).listen((_) {
+      // Lakukan permintaan Firestore untuk mendapatkan data terbaru
+      // Ganti dengan kode stream Firestore yang sesuai
+      FirebaseFirestore.instance
+          .collection('average_amoniak')
+          .orderBy('timestamp', descending: false)
+          .limit(12)
+          .get()
+          .then((QuerySnapshot querySnapshot) {
+        if (querySnapshot.docs.isNotEmpty) {
+          List<Amoniak> amoniakData = querySnapshot.docs.map((doc) {
+            return Amoniak.fromMap(doc.data() as Map<String, dynamic>);
+          }).toList();
+          setState(() {
+            mydata = amoniakData;
+          });
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _subscription?.cancel();
+  }
 
   double _getMaxAmoniakValue(List<Amoniak> data) {
     double maxVal = 0.0;
@@ -98,7 +128,8 @@ class _GrafikAmoniak extends State<GrafikAmoniak> {
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(
-                          child: CircularProgressIndicator());
+                        child: CircularProgressIndicator(),
+                      );
                     } else {
                       List<Amoniak> amoniakData = [];
                       for (QueryDocumentSnapshot document
@@ -111,7 +142,7 @@ class _GrafikAmoniak extends State<GrafikAmoniak> {
                       return Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: SizedBox(
-                          height: 250, // Sesuaikan tinggi sesuai kebutuhan
+                          height: 250,
                           child: LineChart(
                             LineChartData(
                               gridData: FlGridData(show: true),
@@ -122,10 +153,9 @@ class _GrafikAmoniak extends State<GrafikAmoniak> {
                                   showTitles: true,
                                   reservedSize: 20,
                                   getTitles: (value) {
-                                    // Tampilkan angka bulat di sumbu Y, dimulai dari 1
                                     if (value ==
                                         _getMinAmoniakValue(mydata) - 2) {
-                                      return ''; // Jika nilai adalah 0, maka jangan tampilkan label
+                                      return '';
                                     } else {
                                       return value.toInt().toString();
                                     }
@@ -135,10 +165,9 @@ class _GrafikAmoniak extends State<GrafikAmoniak> {
                                   showTitles: true,
                                   reservedSize: 20,
                                   getTitles: (value) {
-                                    // Tampilkan jam di sumbu X
-                                    int index = value.toInt();
-                                    if (index >= 0 && index <= 12) {
-                                      if ((index) % 2 == 0) {
+                                    int index = value.toInt() + 1;
+                                    if (index > 0 && index <= 12) {
+                                      if (index % 2 == 0) {
                                         DateTime currentTime = DateTime.now();
                                         DateTime timestamp =
                                             currentTime.subtract(
@@ -154,14 +183,13 @@ class _GrafikAmoniak extends State<GrafikAmoniak> {
                                 ),
                               ),
                               borderData: FlBorderData(show: false),
-                              minX: -1,
+                              minX: 0,
                               maxX: 11,
                               minY: _getMinAmoniakValue(mydata) - 2,
                               maxY: _getMaxAmoniakValue(mydata) + 2,
                               lineBarsData: [
                                 LineChartBarData(
-                                  spots:
-                                      mydata.asMap().entries.map((entry) {
+                                  spots: mydata.asMap().entries.map((entry) {
                                     return FlSpot(entry.key.toDouble(),
                                         entry.value.averageAmoniak);
                                   }).toList(),

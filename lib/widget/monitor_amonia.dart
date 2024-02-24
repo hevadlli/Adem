@@ -78,7 +78,6 @@ class _MonitorAmoniaState extends State<MonitorAmonia> {
         'timestamp': FieldValue.serverTimestamp(),
       });
     }
-
     setState(() {
       _averageAmoniak = averageAmoniak;
     });
