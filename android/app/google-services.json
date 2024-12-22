@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "641481640590",
+    "project_id": "coba-b46cc",
+    "storage_bucket": "coba-b46cc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:641481640590:android:6111d4fc04229e554217df",
+        "android_client_info": {
+          "package_name": "com.example.adem"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "641481640590-eik3oree15r16oal1fu833kjv511ga03.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfDCKuXDVDWQ27T35FOh9J99lwdNRYNF4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "641481640590-eik3oree15r16oal1fu833kjv511ga03.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

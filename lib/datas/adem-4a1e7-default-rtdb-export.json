@@ -1,0 +1,36 @@
+{
+    "kandangs": [
+      {
+        "name": "Kandang 1",
+        "nodes": [
+          {
+            "name": "Node 1",
+            "value": {
+              "suhu": "27.3",
+              "kelembaban": "85.3"
+            }
+          },
+          {
+            "name": "Node 2",
+            "value": {
+              "suhu": "26.7",
+              "kelembaban": "83.1"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Kandang 2",
+        "nodes": [
+          {
+            "name": "Node 1",
+            "value": {
+              "suhu": "25.8",
+              "kelembaban": "85.4"
+            }
+          }
+        ]
+      }
+    ]
+  }
+  
